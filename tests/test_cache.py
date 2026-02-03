@@ -2,9 +2,7 @@
 
 import time
 import threading
-from unittest.mock import patch
 
-import pytest
 from prompt_security.cache import ScreeningCache, CacheEntry, get_cache
 
 

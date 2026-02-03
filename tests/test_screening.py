@@ -1,16 +1,17 @@
 """Tests for LLM screening."""
 
-import json
 from unittest.mock import patch, MagicMock
+
 import httpx
 
-import pytest
 from prompt_security.screening import (
     screen_content,
+    screen_content_chunked,
     screen_content_haiku,
     screen_content_local,
     ScreenResult,
     _parse_screen_response,
+    _split_into_chunks,
     HARMLESSNESS_PROMPT,
 )
 from prompt_security.config import SecurityConfig
@@ -257,15 +258,6 @@ def test_harmlessness_prompt_format():
     assert "{content}" in HARMLESSNESS_PROMPT
     formatted = HARMLESSNESS_PROMPT.format(content="test")
     assert "test" in formatted
-
-
-# Import chunked screening for tests
-from prompt_security.screening import (
-    screen_content_chunked,
-    _split_into_chunks,
-    HAIKU_CHUNK_SIZE,
-    OLLAMA_CHUNK_SIZE,
-)
 
 
 class TestSplitIntoChunks:

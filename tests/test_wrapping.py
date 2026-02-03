@@ -1,6 +1,5 @@
 """Tests for content wrapping."""
 
-import pytest
 from prompt_security.wrapping import (
     wrap_untrusted_content,
     WrappedContent,

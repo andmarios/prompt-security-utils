@@ -1,6 +1,5 @@
 """Tests for output helpers."""
 
-import pytest
 from prompt_security.output import (
     wrap_field,
     wrap_fields,
