@@ -38,12 +38,12 @@ class DetectionResult:
 # Format: (regex_pattern, category, severity)
 SUSPICIOUS_PATTERNS: list[tuple[str, str, Severity]] = [
     # === INSTRUCTION OVERRIDE (HIGH) ===
-    (r"ignore\s+(all\s+)?(previous|prior|above)\s+instructions?", "instruction_override", Severity.HIGH),
+    (r"ignore\s+(all\s+)?(your\s+)?(previous|prior|above)\s+(instructions?|prompts?|rules|guidelines)", "instruction_override", Severity.HIGH),
     (r"disregard\s+(all\s+)?(previous|prior|above)", "instruction_override", Severity.HIGH),
-    (r"forget\s+(everything|all|your)\s+(instructions?|rules|guidelines)", "instruction_override", Severity.HIGH),
-    (r"override\s+(security|instructions?|rules|guidelines|safety)", "instruction_override", Severity.HIGH),
-    (r"do\s+not\s+follow\s+(your|the|any)\s+(instructions?|rules|guidelines)", "instruction_override", Severity.HIGH),
-    (r"(new|updated|revised)\s+instructions?\s*:", "instruction_override", Severity.HIGH),
+    (r"forget\s+(everything|all|your)\s+(instructions?|prompts?|rules|guidelines)", "instruction_override", Severity.HIGH),
+    (r"override\s+(security|instructions?|prompts?|rules|guidelines|safety)", "instruction_override", Severity.HIGH),
+    (r"do\s+not\s+follow\s+(your|the|any)\s+(instructions?|prompts?|rules|guidelines)", "instruction_override", Severity.HIGH),
+    (r"(new|updated|revised)\s+(instructions?|prompts?)\s*:", "instruction_override", Severity.HIGH),
 
     # === ROLE HIJACKING (HIGH) ===
     (r"you\s+are\s+now\s+(a|an|my)", "role_hijack", Severity.HIGH),
