@@ -1,6 +1,6 @@
 # Prompt Security Utils
 
-Prompt injection protection for LLM applications. Provides content wrapping, pattern detection, and optional LLM-based screening.
+A Python library for protecting LLM applications against prompt injection attacks. Provides content wrapping, pattern detection, and optional LLM-based screening.
 
 ## Installation
 
@@ -14,7 +14,7 @@ Or with uv:
 uv add prompt-security-utils
 ```
 
-## Usage
+## Quick Start
 
 ```python
 from prompt_security import (
@@ -46,104 +46,87 @@ response = output_external_content(
 
 ## Configuration
 
-Security settings are stored in `~/.claude/.prompt-security/config.json`:
+Settings are stored in `~/.claude/.prompt-security/config.json`. This library provides **core security settings only**. Service-specific settings (allowlists, disabled operations) belong in the consuming applications.
+
+### Configuration File
 
 ```json
 {
   "content_start_marker": "<<<EXTERNAL_CONTENT>>>",
   "content_end_marker": "<<<END_EXTERNAL_CONTENT>>>",
   "llm_screen_enabled": false,
+  "llm_screen_chunked": true,
+  "llm_screen_max_chunks": 10,
   "use_local_llm": false,
   "ollama_url": "http://localhost:11434",
   "ollama_model": "llama3.2:1b",
   "screen_timeout": 5.0,
   "detection_enabled": true,
   "custom_patterns": [],
-  "allowlisted_documents": [],
-  "allowlisted_emails": [],
-  "allowlisted_tickets": [],
-  "disabled_services": [],
-  "disabled_operations": {},
   "cache_enabled": true,
   "cache_ttl_seconds": 900,
   "cache_max_size": 1000
 }
 ```
 
-### Configuration Options
+## Configuration Reference
 
-#### Content Markers (Security-Critical)
+### Content Markers
+
+Markers wrap external content to help LLMs distinguish data from instructions.
 
 | Setting | Type | Default | Description |
 |---------|------|---------|-------------|
-| `content_start_marker` | string | `"<<<EXTERNAL_CONTENT>>>"` | Marker placed before untrusted content |
-| `content_end_marker` | string | `"<<<END_EXTERNAL_CONTENT>>>"` | Marker placed after untrusted content |
+| `content_start_marker` | string | `"<<<EXTERNAL_CONTENT>>>"` | Marker before untrusted content |
+| `content_end_marker` | string | `"<<<END_EXTERNAL_CONTENT>>>"` | Marker after untrusted content |
 
-**⚠️ IMPORTANT:** Since this repository is open source, the default markers are publicly known. Attackers could craft content containing these exact markers to escape the "data boundary" and inject instructions.
-
-**Recommended:** Configure custom, secret markers unique to your deployment:
+**Security Note:** This library is open source, so the default markers are publicly known. Attackers could craft content containing these exact markers to escape the data boundary. Configure custom, secret markers unique to your deployment:
 
 ```json
 {
-  "content_start_marker": "«««YOUR_SECRET_START_MARKER_xyz123»»»",
-  "content_end_marker": "«««YOUR_SECRET_END_MARKER_xyz123»»»"
+  "content_start_marker": "«««UNTRUSTED_xyz123»»»",
+  "content_end_marker": "«««END_UNTRUSTED_xyz123»»»"
 }
 ```
 
-Use markers that:
-- Are unlikely to appear in normal content
-- Include random characters/numbers
-- Are kept secret (not committed to repos)
+Use markers that are unlikely to appear in normal content and include random characters.
 
-#### LLM Screening Settings
+### LLM Screening
+
+Optional AI-powered content screening using Claude Haiku or a local Ollama model.
 
 | Setting | Type | Default | Description |
 |---------|------|---------|-------------|
-| `llm_screen_enabled` | bool | `false` | Enable LLM-based content screening (uses API calls) |
-| `llm_screen_chunked` | bool | `true` | Use chunked screening for large content (screens all content) |
+| `llm_screen_enabled` | bool | `false` | Enable LLM-based screening (opt-in) |
+| `llm_screen_chunked` | bool | `true` | Screen large content in chunks |
 | `llm_screen_max_chunks` | int | `10` | Maximum chunks to screen (0 = unlimited) |
-| `use_local_llm` | bool | `false` | Use local Ollama instead of Claude Haiku for screening |
-| `ollama_url` | string | `"http://localhost:11434"` | Ollama API URL (when `use_local_llm` is true) |
-| `ollama_model` | string | `"llama3.2:1b"` | Ollama model to use for screening |
-| `screen_timeout` | float | `5.0` | Timeout in seconds for LLM screening requests |
+| `use_local_llm` | bool | `false` | Use Ollama instead of Claude Haiku |
+| `ollama_url` | string | `"http://localhost:11434"` | Ollama API URL |
+| `ollama_model` | string | `"llama3.2:1b"` | Ollama model name |
+| `screen_timeout` | float | `5.0` | Timeout in seconds per request |
 
-#### Detection Settings
+### Pattern Detection
 
-| Setting | Type | Default | Description |
-|---------|------|---------|-------------|
-| `detection_enabled` | bool | `true` | Enable regex-based pattern detection |
-| `custom_patterns` | array | `[]` | User-defined detection patterns (see below) |
-
-#### Allowlists
-
-Allowlisted items bypass security wrapping entirely.
+Regex-based detection of suspicious patterns in content.
 
 | Setting | Type | Default | Description |
 |---------|------|---------|-------------|
-| `allowlisted_documents` | array | `[]` | Document IDs to skip wrapping (Google Docs, Sheets, Slides) |
-| `allowlisted_emails` | array | `[]` | Email/message IDs to skip wrapping |
-| `allowlisted_tickets` | array | `[]` | Ticket IDs to skip wrapping (Zendesk, etc.) |
+| `detection_enabled` | bool | `true` | Enable pattern detection |
+| `custom_patterns` | array | `[]` | User-defined detection patterns |
 
-#### Service/Operation Toggles
+### Caching
 
-| Setting | Type | Default | Description |
-|---------|------|---------|-------------|
-| `disabled_services` | array | `[]` | Services to disable wrapping for (e.g., `["gmail", "calendar"]`) |
-| `disabled_operations` | object | `{}` | Specific operations to disable (e.g., `{"gmail.read": false}`) |
-
-#### Caching Settings
-
-Cache stores LLM screening results to avoid repeated API calls.
+Cache LLM screening results to reduce API calls.
 
 | Setting | Type | Default | Description |
 |---------|------|---------|-------------|
-| `cache_enabled` | bool | `true` | Enable caching of LLM screening results |
-| `cache_ttl_seconds` | int | `900` | Cache entry time-to-live (15 minutes default) |
-| `cache_max_size` | int | `1000` | Maximum number of cached entries |
+| `cache_enabled` | bool | `true` | Enable result caching |
+| `cache_ttl_seconds` | int | `900` | Cache entry lifetime (15 min) |
+| `cache_max_size` | int | `1000` | Maximum cached entries |
 
-### Custom Patterns
+## Custom Patterns
 
-Add your own detection patterns as arrays of `[regex, category, severity]`:
+Add detection patterns as arrays of `[regex, category, severity]`:
 
 ```json
 {
@@ -157,11 +140,9 @@ Add your own detection patterns as arrays of `[regex, category, severity]`:
 
 **Severity levels:** `"high"`, `"medium"`, `"low"`
 
-**Note:** Patterns use Python regex syntax. Remember to double-escape backslashes in JSON.
+Patterns use Python regex syntax. Double-escape backslashes in JSON.
 
 ## Built-in Detection Categories
-
-The following patterns are detected by default:
 
 | Category | Severity | Examples |
 |----------|----------|----------|
@@ -175,6 +156,18 @@ The following patterns are detected by default:
 | `html_encoding` | MEDIUM | HTML entities like `&#x3C;` |
 | `unicode_escape` | MEDIUM | Unicode escapes like `\u0069` |
 | `invisible_chars` | MEDIUM | Zero-width characters |
+
+## Integration with Services
+
+This library provides core security functionality. Consuming services implement their own configuration for:
+
+- **Allowlists** - IDs of trusted sources to skip wrapping
+- **Service toggles** - Enable/disable security per service
+- **Operation toggles** - Fine-grained control per operation
+
+See the documentation for each consuming service:
+- [google-workspace](https://github.com/your-username/google-workspace) - Google Docs, Gmail, etc.
+- [zendesk-skill](https://github.com/your-username/zendesk-skill) - Zendesk tickets
 
 ## License
 
