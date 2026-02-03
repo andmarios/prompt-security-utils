@@ -13,6 +13,7 @@ def wrap_field(
     source_type: str,
     source_id: str,
     config: SecurityConfig | None = None,
+    skip_wrapping: bool = False,
 ) -> dict[str, Any]:
     """
     Wrap a single field with security markers and detection.
@@ -22,6 +23,7 @@ def wrap_field(
         source_type: Type of source ("email", "document", etc.)
         source_id: Unique identifier for the source
         config: Security config (loads from file if not provided)
+        skip_wrapping: If True, return content unwrapped (caller handles allowlisting)
 
     Returns:
         Dict with wrapped content and any security warnings
@@ -29,8 +31,8 @@ def wrap_field(
     if config is None:
         config = load_config()
 
-    # Check allowlist - return unwrapped if allowlisted
-    if config.is_allowlisted(source_type, source_id):
+    # Skip wrapping if caller indicates content is allowlisted
+    if skip_wrapping:
         return {"data": content, "allowlisted": True}
 
     # Wrap the content with config markers
@@ -112,6 +114,7 @@ def output_external_content(
     source_id: str,
     content_fields: dict[str, str],
     config: SecurityConfig | None = None,
+    skip_wrapping: bool = False,
     **kwargs: Any,
 ) -> dict[str, Any]:
     """
@@ -124,6 +127,7 @@ def output_external_content(
         content_fields: Dict mapping field names to content
                        e.g., {"body": "email body", "subject": "email subject"}
         config: Security config (loads from file if not provided)
+        skip_wrapping: If True, return content unwrapped (caller handles allowlisting)
         **kwargs: Additional fields to include in response
 
     Returns:
@@ -150,9 +154,8 @@ def output_external_content(
     if config is None:
         config = load_config()
 
-    # Check if operation is disabled
-    if not config.is_operation_enabled(operation):
-        # Return without wrapping
+    # Skip wrapping if caller indicates operation is disabled or content is allowlisted
+    if skip_wrapping:
         return {
             "status": "success",
             "operation": operation,

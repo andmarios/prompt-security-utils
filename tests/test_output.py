@@ -1,7 +1,5 @@
 """Tests for output helpers."""
 
-from unittest.mock import patch, MagicMock
-
 import pytest
 from prompt_security.output import (
     wrap_field,
@@ -9,7 +7,6 @@ from prompt_security.output import (
     output_external_content,
 )
 from prompt_security.config import SecurityConfig
-from prompt_security.detection import Severity
 
 
 class TestWrapField:
@@ -25,10 +22,10 @@ class TestWrapField:
         assert result["source_id"] == "msg123"
         assert result["data"] == "test content"
 
-    def test_allowlisted_returns_unwrapped(self):
-        """Test that allowlisted content is not wrapped."""
-        config = SecurityConfig(allowlisted_emails=["msg123"])
-        result = wrap_field("test content", "email", "msg123", config)
+    def test_skip_wrapping_returns_unwrapped(self):
+        """Test that skip_wrapping=True returns content unwrapped."""
+        config = SecurityConfig()
+        result = wrap_field("test content", "email", "msg123", config, skip_wrapping=True)
 
         assert result["data"] == "test content"
         assert result["allowlisted"] is True
@@ -200,34 +197,21 @@ class TestOutputExternalContent:
         assert len(result["security_warnings"]) > 0
         assert "suspicious" in result["security_note"].lower()
 
-    def test_operation_disabled_no_wrapping(self):
-        """Test that disabled operations return unwrapped content."""
-        config = SecurityConfig(disabled_operations={"gmail.read": False})
+    def test_skip_wrapping_no_wrapping(self):
+        """Test that skip_wrapping=True returns unwrapped content."""
+        config = SecurityConfig()
         result = output_external_content(
             operation="gmail.read",
             source_type="email",
             source_id="msg123",
             content_fields={"body": "Hello"},
             config=config,
+            skip_wrapping=True,
         )
 
         # Body should be plain string, not wrapped
         assert result["body"] == "Hello"
         assert "security_note" not in result
-
-    def test_service_disabled_no_wrapping(self):
-        """Test that disabled services return unwrapped content."""
-        config = SecurityConfig(disabled_services=["gmail"])
-        result = output_external_content(
-            operation="gmail.read",
-            source_type="email",
-            source_id="msg123",
-            content_fields={"body": "Hello"},
-            config=config,
-        )
-
-        # Body should be plain string, not wrapped
-        assert result["body"] == "Hello"
 
     def test_empty_content_fields(self):
         """Test handling of empty content_fields."""
