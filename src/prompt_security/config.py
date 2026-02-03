@@ -20,6 +20,8 @@ class SecurityConfig:
 
     # === LLM Screening Settings ===
     llm_screen_enabled: bool = False  # Disabled by default (opt-in)
+    llm_screen_chunked: bool = True   # Use chunked screening for large content
+    llm_screen_max_chunks: int = 10   # Max chunks to screen (0 = unlimited)
     use_local_llm: bool = False       # Use Haiku by default
     ollama_url: str = "http://localhost:11434"
     ollama_model: str = "llama3.2:1b"

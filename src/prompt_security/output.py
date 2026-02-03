@@ -4,7 +4,7 @@ from typing import Any
 
 from prompt_security.wrapping import wrap_untrusted_content
 from prompt_security.detection import detect_suspicious_content
-from prompt_security.screening import screen_content
+from prompt_security.screening import screen_content, screen_content_chunked
 from prompt_security.config import SecurityConfig, load_config
 
 
@@ -52,7 +52,13 @@ def wrap_field(
     # Run LLM screening if enabled
     llm_warning: dict[str, Any] | None = None
     if config.llm_screen_enabled:
-        screen_result = screen_content(content, config)
+        # Use chunked screening for large content
+        if config.llm_screen_chunked:
+            max_chunks = config.llm_screen_max_chunks if config.llm_screen_max_chunks > 0 else None
+            screen_result = screen_content_chunked(content, config, max_chunks=max_chunks)
+        else:
+            screen_result = screen_content(content, config)
+
         if screen_result and screen_result.injection_detected:
             llm_warning = screen_result.to_dict()
 

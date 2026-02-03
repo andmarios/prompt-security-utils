@@ -14,6 +14,7 @@ from prompt_security.detection import (
 )
 from prompt_security.screening import (
     screen_content,
+    screen_content_chunked,
     screen_content_haiku,
     screen_content_local,
     ScreenResult,
@@ -46,6 +47,7 @@ __all__ = [
     "Severity",
     # Screening
     "screen_content",
+    "screen_content_chunked",
     "screen_content_haiku",
     "screen_content_local",
     "ScreenResult",

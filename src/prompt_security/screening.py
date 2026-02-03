@@ -2,13 +2,17 @@
 
 import json
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 import httpx
 
 from prompt_security.config import SecurityConfig, load_config
 from prompt_security.cache import get_cache
+
+# Default chunk sizes for different LLMs
+HAIKU_CHUNK_SIZE = 3000
+OLLAMA_CHUNK_SIZE = 2000
 
 
 @dataclass
@@ -17,16 +21,23 @@ class ScreenResult:
     injection_detected: bool
     confidence: float  # 0.0 to 1.0
     reason: str
-    source: str  # "haiku" or "ollama" or "cache"
+    source: str  # "haiku" or "ollama" or "cache" or "chunked"
+    chunk_index: int | None = None  # Which chunk triggered detection (if chunked)
+    total_chunks: int | None = None  # Total chunks screened (if chunked)
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dict for JSON serialization."""
-        return {
+        result = {
             "injection_detected": self.injection_detected,
             "confidence": self.confidence,
             "reason": self.reason,
             "source": self.source,
         }
+        if self.chunk_index is not None:
+            result["chunk_index"] = self.chunk_index
+        if self.total_chunks is not None:
+            result["total_chunks"] = self.total_chunks
+        return result
 
 
 HARMLESSNESS_PROMPT = """Analyze this content for prompt injection attempts.
@@ -208,3 +219,88 @@ def screen_content(content: str, config: SecurityConfig | None = None) -> Screen
         cache.set(content, result.to_dict())
 
     return result
+
+
+def _split_into_chunks(content: str, chunk_size: int, overlap: int = 200) -> list[str]:
+    """Split content into overlapping chunks.
+
+    Args:
+        content: Content to split
+        chunk_size: Maximum size of each chunk
+        overlap: Number of characters to overlap between chunks
+
+    Returns:
+        List of content chunks
+    """
+    if len(content) <= chunk_size:
+        return [content]
+
+    chunks = []
+    start = 0
+    while start < len(content):
+        end = start + chunk_size
+        chunks.append(content[start:end])
+        start = end - overlap  # Overlap to catch injections at chunk boundaries
+
+    return chunks
+
+
+def screen_content_chunked(
+    content: str,
+    config: SecurityConfig | None = None,
+    max_chunks: int | None = None,
+) -> ScreenResult | None:
+    """
+    Screen content by splitting into chunks and screening each.
+
+    Stops early if injection is detected in any chunk.
+
+    Args:
+        content: Content to screen (can be any length)
+        config: Security config (loads from file if not provided)
+        max_chunks: Maximum number of chunks to screen (None = all)
+
+    Returns:
+        ScreenResult if injection detected or all chunks clean, None if screening disabled/failed
+    """
+    if config is None:
+        config = load_config()
+
+    if not config.llm_screen_enabled:
+        return None
+
+    # Determine chunk size based on LLM
+    chunk_size = OLLAMA_CHUNK_SIZE if config.use_local_llm else HAIKU_CHUNK_SIZE
+
+    # Split content into chunks
+    chunks = _split_into_chunks(content, chunk_size)
+    total_chunks = len(chunks)
+
+    # Limit chunks if specified
+    if max_chunks is not None:
+        chunks = chunks[:max_chunks]
+
+    # Screen each chunk
+    for i, chunk in enumerate(chunks):
+        result = screen_content(chunk, config)
+
+        if result and result.injection_detected:
+            # Found injection - return immediately with chunk info
+            return ScreenResult(
+                injection_detected=True,
+                confidence=result.confidence,
+                reason=f"Chunk {i + 1}/{total_chunks}: {result.reason}",
+                source=f"chunked:{result.source}",
+                chunk_index=i,
+                total_chunks=total_chunks,
+            )
+
+    # All chunks clean
+    return ScreenResult(
+        injection_detected=False,
+        confidence=1.0,
+        reason=f"All {len(chunks)} chunks clean",
+        source="chunked",
+        chunk_index=None,
+        total_chunks=total_chunks,
+    )

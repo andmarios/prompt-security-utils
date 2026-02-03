@@ -100,6 +100,8 @@ Use markers that:
 | Setting | Type | Default | Description |
 |---------|------|---------|-------------|
 | `llm_screen_enabled` | bool | `false` | Enable LLM-based content screening (uses API calls) |
+| `llm_screen_chunked` | bool | `true` | Use chunked screening for large content (screens all content) |
+| `llm_screen_max_chunks` | int | `10` | Maximum chunks to screen (0 = unlimited) |
 | `use_local_llm` | bool | `false` | Use local Ollama instead of Claude Haiku for screening |
 | `ollama_url` | string | `"http://localhost:11434"` | Ollama API URL (when `use_local_llm` is true) |
 | `ollama_model` | string | `"llama3.2:1b"` | Ollama model to use for screening |

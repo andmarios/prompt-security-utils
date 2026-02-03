@@ -257,3 +257,118 @@ def test_harmlessness_prompt_format():
     assert "{content}" in HARMLESSNESS_PROMPT
     formatted = HARMLESSNESS_PROMPT.format(content="test")
     assert "test" in formatted
+
+
+# Import chunked screening for tests
+from prompt_security.screening import (
+    screen_content_chunked,
+    _split_into_chunks,
+    HAIKU_CHUNK_SIZE,
+    OLLAMA_CHUNK_SIZE,
+)
+
+
+class TestSplitIntoChunks:
+    """Test _split_into_chunks function."""
+
+    def test_short_content_single_chunk(self):
+        """Short content should return single chunk."""
+        content = "Short content"
+        chunks = _split_into_chunks(content, chunk_size=1000)
+        assert len(chunks) == 1
+        assert chunks[0] == content
+
+    def test_long_content_multiple_chunks(self):
+        """Long content should be split into multiple chunks."""
+        content = "A" * 5000
+        chunks = _split_into_chunks(content, chunk_size=1000, overlap=100)
+        assert len(chunks) > 1
+        # Each chunk should be at most chunk_size
+        for chunk in chunks:
+            assert len(chunk) <= 1000
+
+    def test_chunks_overlap(self):
+        """Chunks should overlap to catch boundary injections."""
+        content = "0123456789" * 100  # 1000 chars
+        chunks = _split_into_chunks(content, chunk_size=300, overlap=50)
+
+        # Check that consecutive chunks overlap
+        for i in range(len(chunks) - 1):
+            # End of chunk i should match start of chunk i+1
+            assert chunks[i][-50:] == chunks[i + 1][:50]
+
+
+class TestScreenContentChunked:
+    """Test screen_content_chunked function."""
+
+    def test_disabled_returns_none(self):
+        """Return None when screening is disabled."""
+        config = SecurityConfig(llm_screen_enabled=False)
+        result = screen_content_chunked("test content", config)
+        assert result is None
+
+    @patch("prompt_security.screening.screen_content")
+    def test_stops_on_detection(self, mock_screen):
+        """Should stop early when injection is detected."""
+        # First chunk clean, second chunk has injection
+        mock_screen.side_effect = [
+            ScreenResult(False, 0.1, "clean", "haiku"),
+            ScreenResult(True, 0.9, "injection found", "haiku"),
+            ScreenResult(False, 0.1, "clean", "haiku"),  # Should not be called
+        ]
+
+        config = SecurityConfig(llm_screen_enabled=True, cache_enabled=False)
+        content = "A" * 10000  # Large content
+
+        result = screen_content_chunked(content, config)
+
+        assert result is not None
+        assert result.injection_detected is True
+        assert result.chunk_index == 1
+        assert "chunked" in result.source
+        # Should only have called screen_content twice
+        assert mock_screen.call_count == 2
+
+    @patch("prompt_security.screening.screen_content")
+    def test_all_chunks_clean(self, mock_screen):
+        """Should return clean result when all chunks are clean."""
+        mock_screen.return_value = ScreenResult(False, 0.1, "clean", "haiku")
+
+        config = SecurityConfig(llm_screen_enabled=True, cache_enabled=False)
+        content = "A" * 10000
+
+        result = screen_content_chunked(content, config)
+
+        assert result is not None
+        assert result.injection_detected is False
+        assert result.total_chunks is not None
+        assert result.total_chunks > 1
+
+    @patch("prompt_security.screening.screen_content")
+    def test_max_chunks_limit(self, mock_screen):
+        """Should respect max_chunks limit."""
+        mock_screen.return_value = ScreenResult(False, 0.1, "clean", "haiku")
+
+        config = SecurityConfig(llm_screen_enabled=True, cache_enabled=False)
+        content = "A" * 50000  # Very large content
+
+        result = screen_content_chunked(content, config, max_chunks=3)
+
+        assert result is not None
+        # Should only screen 3 chunks
+        assert mock_screen.call_count == 3
+
+    def test_result_includes_chunk_info(self):
+        """ScreenResult should include chunk information."""
+        result = ScreenResult(
+            injection_detected=True,
+            confidence=0.9,
+            reason="test",
+            source="chunked:haiku",
+            chunk_index=2,
+            total_chunks=5,
+        )
+
+        d = result.to_dict()
+        assert d["chunk_index"] == 2
+        assert d["total_chunks"] == 5
