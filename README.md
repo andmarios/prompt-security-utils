@@ -46,7 +46,7 @@ response = output_external_content(
 
 ## Configuration
 
-Security settings are stored in `~/.claude/.mcp-security/config.json`:
+Security settings are stored in `~/.claude/.prompt-security/config.json`:
 
 ```json
 {

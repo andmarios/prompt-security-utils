@@ -10,7 +10,7 @@ from typing import Any, ClassVar
 class SecurityConfig:
     """Security configuration with all settings."""
 
-    CONFIG_PATH: ClassVar[Path] = Path.home() / ".claude" / ".mcp-security" / "config.json"
+    CONFIG_PATH: ClassVar[Path] = Path.home() / ".claude" / ".prompt-security" / "config.json"
 
     # === Content Markers ===
     # IMPORTANT: Change these from defaults to prevent marker injection attacks
