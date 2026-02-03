@@ -119,3 +119,54 @@ def test_wrap_untrusted_content_warning_message():
 
     assert "EXTERNAL" in warning.upper()
     assert "data" in warning.lower() or "DATA" in warning
+
+
+def test_wrap_untrusted_content_custom_markers():
+    """Verify custom markers can be provided."""
+    custom_start = "<<<CUSTOM_START_xyz123>>>"
+    custom_end = "<<<CUSTOM_END_xyz123>>>"
+
+    result = wrap_untrusted_content(
+        "test content",
+        "email",
+        "msg123",
+        start_marker=custom_start,
+        end_marker=custom_end,
+    )
+
+    assert result["content_start_marker"] == custom_start
+    assert result["content_end_marker"] == custom_end
+
+
+def test_wrap_untrusted_content_default_markers_when_none():
+    """Verify default markers are used when custom markers are None."""
+    from prompt_security.wrapping import DEFAULT_START_MARKER, DEFAULT_END_MARKER
+
+    result = wrap_untrusted_content(
+        "test",
+        "email",
+        "msg123",
+        start_marker=None,
+        end_marker=None,
+    )
+
+    assert result["content_start_marker"] == DEFAULT_START_MARKER
+    assert result["content_end_marker"] == DEFAULT_END_MARKER
+
+
+def test_wrap_untrusted_content_mixed_custom_default():
+    """Verify mixing custom and default markers works."""
+    from prompt_security.wrapping import DEFAULT_START_MARKER, DEFAULT_END_MARKER
+
+    custom_start = "<<<MY_CUSTOM_START>>>"
+
+    result = wrap_untrusted_content(
+        "test",
+        "email",
+        "msg123",
+        start_marker=custom_start,
+        end_marker=None,  # Use default
+    )
+
+    assert result["content_start_marker"] == custom_start
+    assert result["content_end_marker"] == DEFAULT_END_MARKER

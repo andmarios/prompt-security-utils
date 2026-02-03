@@ -243,3 +243,52 @@ class TestOutputExternalContent:
         assert result["status"] == "success"
         # No security note when no content
         assert "security_note" not in result or result.get("security_note") is None
+
+    def test_custom_markers_from_config(self):
+        """Test that custom markers from config are used."""
+        custom_start = "«««MY_SECRET_START»»»"
+        custom_end = "«««MY_SECRET_END»»»"
+        config = SecurityConfig(
+            content_start_marker=custom_start,
+            content_end_marker=custom_end,
+        )
+
+        result = output_external_content(
+            operation="gmail.read",
+            source_type="email",
+            source_id="msg123",
+            content_fields={"body": "Hello"},
+            config=config,
+        )
+
+        assert result["body"]["content_start_marker"] == custom_start
+        assert result["body"]["content_end_marker"] == custom_end
+
+
+class TestWrapFieldCustomMarkers:
+    """Test custom marker support in wrap_field."""
+
+    def test_uses_config_markers(self):
+        """Test that wrap_field uses markers from config."""
+        custom_start = "<<<SECRET_START_abc123>>>"
+        custom_end = "<<<SECRET_END_abc123>>>"
+        config = SecurityConfig(
+            content_start_marker=custom_start,
+            content_end_marker=custom_end,
+        )
+
+        result = wrap_field("test content", "email", "msg123", config)
+
+        assert result["content_start_marker"] == custom_start
+        assert result["content_end_marker"] == custom_end
+
+    def test_default_markers_when_not_configured(self):
+        """Test that default markers are used when not configured."""
+        from prompt_security.wrapping import DEFAULT_START_MARKER, DEFAULT_END_MARKER
+
+        config = SecurityConfig()  # Uses defaults
+
+        result = wrap_field("test content", "email", "msg123", config)
+
+        assert result["content_start_marker"] == DEFAULT_START_MARKER
+        assert result["content_end_marker"] == DEFAULT_END_MARKER

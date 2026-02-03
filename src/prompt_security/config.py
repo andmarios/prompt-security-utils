@@ -12,6 +12,12 @@ class SecurityConfig:
 
     CONFIG_PATH: ClassVar[Path] = Path.home() / ".claude" / ".mcp-security" / "config.json"
 
+    # === Content Markers ===
+    # IMPORTANT: Change these from defaults to prevent marker injection attacks
+    # Use unique, secret values that attackers cannot guess
+    content_start_marker: str = "<<<EXTERNAL_CONTENT>>>"
+    content_end_marker: str = "<<<END_EXTERNAL_CONTENT>>>"
+
     # === LLM Screening Settings ===
     llm_screen_enabled: bool = False  # Disabled by default (opt-in)
     use_local_llm: bool = False       # Use Haiku by default

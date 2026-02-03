@@ -33,8 +33,14 @@ def wrap_field(
     if config.is_allowlisted(source_type, source_id):
         return {"data": content, "allowlisted": True}
 
-    # Wrap the content
-    wrapped = wrap_untrusted_content(content, source_type, source_id)
+    # Wrap the content with config markers
+    wrapped = wrap_untrusted_content(
+        content,
+        source_type,
+        source_id,
+        start_marker=config.content_start_marker,
+        end_marker=config.content_end_marker,
+    )
 
     # Run detection if enabled
     warnings: list[dict[str, Any]] = []

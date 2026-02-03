@@ -50,6 +50,8 @@ Security settings are stored in `~/.claude/.mcp-security/config.json`:
 
 ```json
 {
+  "content_start_marker": "<<<EXTERNAL_CONTENT>>>",
+  "content_end_marker": "<<<END_EXTERNAL_CONTENT>>>",
   "llm_screen_enabled": false,
   "use_local_llm": false,
   "ollama_url": "http://localhost:11434",
@@ -69,6 +71,29 @@ Security settings are stored in `~/.claude/.mcp-security/config.json`:
 ```
 
 ### Configuration Options
+
+#### Content Markers (Security-Critical)
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `content_start_marker` | string | `"<<<EXTERNAL_CONTENT>>>"` | Marker placed before untrusted content |
+| `content_end_marker` | string | `"<<<END_EXTERNAL_CONTENT>>>"` | Marker placed after untrusted content |
+
+**⚠️ IMPORTANT:** Since this repository is open source, the default markers are publicly known. Attackers could craft content containing these exact markers to escape the "data boundary" and inject instructions.
+
+**Recommended:** Configure custom, secret markers unique to your deployment:
+
+```json
+{
+  "content_start_marker": "«««YOUR_SECRET_START_MARKER_xyz123»»»",
+  "content_end_marker": "«««YOUR_SECRET_END_MARKER_xyz123»»»"
+}
+```
+
+Use markers that:
+- Are unlikely to appear in normal content
+- Include random characters/numbers
+- Are kept secret (not committed to repos)
 
 #### LLM Screening Settings
 
