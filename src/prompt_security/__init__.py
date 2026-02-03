@@ -1,33 +1,33 @@
-"""MCP Security Utilities - Prompt injection protection for MCP skills."""
+"""Prompt Security Utilities - Prompt injection protection for LLM applications."""
 
-from mcp_security.wrapping import (
+from prompt_security.wrapping import (
     wrap_untrusted_content,
     WrappedContent,
     CONTENT_START_MARKER,
     CONTENT_END_MARKER,
 )
-from mcp_security.detection import (
+from prompt_security.detection import (
     detect_suspicious_content,
     DetectionResult,
     SUSPICIOUS_PATTERNS,
     Severity,
 )
-from mcp_security.screening import (
+from prompt_security.screening import (
     screen_content,
     screen_content_haiku,
     screen_content_local,
     ScreenResult,
 )
-from mcp_security.config import (
+from prompt_security.config import (
     SecurityConfig,
     load_config,
     save_config,
 )
-from mcp_security.cache import (
+from prompt_security.cache import (
     ScreeningCache,
     get_cache,
 )
-from mcp_security.output import (
+from prompt_security.output import (
     output_external_content,
     wrap_field,
     wrap_fields,

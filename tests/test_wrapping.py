@@ -1,7 +1,7 @@
 """Tests for content wrapping."""
 
 import pytest
-from mcp_security.wrapping import (
+from prompt_security.wrapping import (
     wrap_untrusted_content,
     WrappedContent,
     CONTENT_START_MARKER,

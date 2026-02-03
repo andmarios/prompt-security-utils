@@ -7,8 +7,8 @@ from typing import Any
 
 import httpx
 
-from mcp_security.config import SecurityConfig, load_config
-from mcp_security.cache import get_cache
+from prompt_security.config import SecurityConfig, load_config
+from prompt_security.cache import get_cache
 
 
 @dataclass

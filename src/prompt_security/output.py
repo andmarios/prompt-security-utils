@@ -2,10 +2,10 @@
 
 from typing import Any
 
-from mcp_security.wrapping import wrap_untrusted_content
-from mcp_security.detection import detect_suspicious_content
-from mcp_security.screening import screen_content
-from mcp_security.config import SecurityConfig, load_config
+from prompt_security.wrapping import wrap_untrusted_content
+from prompt_security.detection import detect_suspicious_content
+from prompt_security.screening import screen_content
+from prompt_security.config import SecurityConfig, load_config
 
 
 def wrap_field(

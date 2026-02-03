@@ -3,16 +3,16 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "mcp-security-utils"
+name = "prompt-security-utils"
 version = "0.1.0"
-description = "Prompt injection protection for MCP skills"
+description = "Prompt injection protection for LLM applications"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
 authors = [
     { name = "Marios Andreopoulos", email = "opensource@andmarios.com" }
 ]
-keywords = ["mcp", "security", "prompt-injection", "llm"]
+keywords = ["prompt", "security", "prompt-injection", "llm", "ai-safety"]
 dependencies = [
     "httpx>=0.27.0",
 ]
@@ -25,7 +25,7 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/mcp_security"]
+packages = ["src/prompt_security"]
 
 [tool.ruff]
 line-length = 100

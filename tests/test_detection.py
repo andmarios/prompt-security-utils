@@ -1,7 +1,7 @@
 """Tests for pattern detection."""
 
 import pytest
-from mcp_security.detection import (
+from prompt_security.detection import (
     detect_suspicious_content,
     DetectionResult,
     SUSPICIOUS_PATTERNS,

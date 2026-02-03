@@ -1,23 +1,23 @@
-# MCP Security Utils
+# Prompt Security Utils
 
-Prompt injection protection for MCP skills. Provides content wrapping, pattern detection, and optional LLM-based screening.
+Prompt injection protection for LLM applications. Provides content wrapping, pattern detection, and optional LLM-based screening.
 
 ## Installation
 
 ```bash
-pip install mcp-security-utils
+pip install prompt-security-utils
 ```
 
 Or with uv:
 
 ```bash
-uv add mcp-security-utils
+uv add prompt-security-utils
 ```
 
 ## Usage
 
 ```python
-from mcp_security import (
+from prompt_security import (
     wrap_untrusted_content,
     detect_suspicious_content,
     output_external_content,

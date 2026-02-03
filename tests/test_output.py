@@ -3,13 +3,13 @@
 from unittest.mock import patch, MagicMock
 
 import pytest
-from mcp_security.output import (
+from prompt_security.output import (
     wrap_field,
     wrap_fields,
     output_external_content,
 )
-from mcp_security.config import SecurityConfig
-from mcp_security.detection import Severity
+from prompt_security.config import SecurityConfig
+from prompt_security.detection import Severity
 
 
 class TestWrapField:

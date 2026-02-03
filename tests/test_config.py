@@ -6,7 +6,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-from mcp_security.config import SecurityConfig, load_config, save_config
+from prompt_security.config import SecurityConfig, load_config, save_config
 
 
 @pytest.fixture

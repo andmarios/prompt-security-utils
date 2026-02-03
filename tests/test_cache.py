@@ -5,7 +5,7 @@ import threading
 from unittest.mock import patch
 
 import pytest
-from mcp_security.cache import ScreeningCache, CacheEntry, get_cache
+from prompt_security.cache import ScreeningCache, CacheEntry, get_cache
 
 
 class TestCacheEntry:
@@ -156,7 +156,7 @@ class TestGetCache:
     def test_returns_singleton(self):
         """Test that get_cache returns the same instance."""
         # Reset global cache for test
-        import mcp_security.cache as cache_module
+        import prompt_security.cache as cache_module
         cache_module._cache = None
 
         cache1 = get_cache()
@@ -166,7 +166,7 @@ class TestGetCache:
 
     def test_uses_provided_settings_on_first_call(self):
         """Test that settings are used on first call."""
-        import mcp_security.cache as cache_module
+        import prompt_security.cache as cache_module
         cache_module._cache = None
 
         cache = get_cache(max_size=50, ttl_seconds=100)
@@ -179,7 +179,7 @@ class TestGetCache:
 
     def test_ignores_settings_on_subsequent_calls(self):
         """Test that settings are ignored after first call."""
-        import mcp_security.cache as cache_module
+        import prompt_security.cache as cache_module
         cache_module._cache = None
 
         cache1 = get_cache(max_size=50, ttl_seconds=100)

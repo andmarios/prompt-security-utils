@@ -5,7 +5,7 @@ from unittest.mock import patch, MagicMock
 import httpx
 
 import pytest
-from mcp_security.screening import (
+from prompt_security.screening import (
     screen_content,
     screen_content_haiku,
     screen_content_local,
@@ -13,7 +13,7 @@ from mcp_security.screening import (
     _parse_screen_response,
     HARMLESSNESS_PROMPT,
 )
-from mcp_security.config import SecurityConfig
+from prompt_security.config import SecurityConfig
 
 
 class TestScreenResult:
@@ -186,8 +186,8 @@ class TestScreenContent:
         result = screen_content("test content", config)
         assert result is None
 
-    @patch("mcp_security.screening.screen_content_haiku")
-    @patch("mcp_security.screening.get_cache")
+    @patch("prompt_security.screening.screen_content_haiku")
+    @patch("prompt_security.screening.get_cache")
     def test_uses_cache(self, mock_get_cache, mock_haiku):
         """Test that cache is used."""
         mock_cache = MagicMock()
@@ -205,8 +205,8 @@ class TestScreenContent:
         assert result.source == "cache"
         mock_haiku.assert_not_called()
 
-    @patch("mcp_security.screening.screen_content_haiku")
-    @patch("mcp_security.screening.get_cache")
+    @patch("prompt_security.screening.screen_content_haiku")
+    @patch("prompt_security.screening.get_cache")
     def test_caches_result(self, mock_get_cache, mock_haiku):
         """Test that results are cached."""
         mock_cache = MagicMock()
@@ -225,8 +225,8 @@ class TestScreenContent:
 
         mock_cache.set.assert_called_once()
 
-    @patch("mcp_security.screening.screen_content_local")
-    @patch("mcp_security.screening.get_cache")
+    @patch("prompt_security.screening.screen_content_local")
+    @patch("prompt_security.screening.get_cache")
     def test_uses_local_llm(self, mock_get_cache, mock_local):
         """Test that local LLM is used when configured."""
         mock_cache = MagicMock()
