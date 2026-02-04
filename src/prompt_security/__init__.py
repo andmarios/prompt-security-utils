@@ -19,6 +19,11 @@ from prompt_security.screening import (
     screen_content_local,
     ScreenResult,
 )
+from prompt_security.semantic import (
+    screen_content_semantic,
+    SemanticResult,
+    SemanticEngine,
+)
 from prompt_security.config import (
     SecurityConfig,
     load_config,
@@ -51,6 +56,10 @@ __all__ = [
     "screen_content_haiku",
     "screen_content_local",
     "ScreenResult",
+    # Semantic
+    "screen_content_semantic",
+    "SemanticResult",
+    "SemanticEngine",
     # Config
     "SecurityConfig",
     "load_config",

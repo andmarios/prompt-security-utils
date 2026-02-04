@@ -4,6 +4,7 @@ from typing import Any
 
 from prompt_security.wrapping import wrap_untrusted_content
 from prompt_security.detection import detect_suspicious_content
+from prompt_security.semantic import screen_content_semantic
 from prompt_security.screening import screen_content, screen_content_chunked
 from prompt_security.config import SecurityConfig, load_config
 
@@ -51,7 +52,14 @@ def wrap_field(
         detections = detect_suspicious_content(content, custom_patterns or None)
         warnings = [d.to_dict() for d in detections]
 
-    # Run LLM screening if enabled
+    # Run semantic similarity screening if enabled (Tier 2)
+    semantic_warning: dict[str, Any] | None = None
+    if config.semantic_enabled:
+        semantic_result = screen_content_semantic(content, config)
+        if semantic_result and semantic_result.injection_detected:
+            semantic_warning = semantic_result.to_dict()
+
+    # Run LLM screening if enabled (Tier 3)
     llm_warning: dict[str, Any] | None = None
     if config.llm_screen_enabled:
         # Use chunked screening for large content
@@ -67,6 +75,8 @@ def wrap_field(
     result = dict(wrapped)
     if warnings:
         result["security_warnings"] = warnings
+    if semantic_warning:
+        result["semantic_warning"] = semantic_warning
     if llm_warning:
         result["llm_screen_warning"] = llm_warning
 
@@ -172,6 +182,7 @@ def output_external_content(
 
     # Wrap each content field
     all_warnings: list[dict[str, Any]] = []
+    semantic_warnings: list[dict[str, Any]] = []
     llm_warnings: list[dict[str, Any]] = []
 
     for field_name, content in content_fields.items():
@@ -181,6 +192,8 @@ def output_external_content(
         # Collect warnings
         if "security_warnings" in wrapped:
             all_warnings.extend(wrapped["security_warnings"])
+        if "semantic_warning" in wrapped:
+            semantic_warnings.append(wrapped["semantic_warning"])
         if "llm_screen_warning" in wrapped:
             llm_warnings.append(wrapped["llm_screen_warning"])
 
@@ -196,6 +209,8 @@ def output_external_content(
     elif content_fields:
         response["security_note"] = "External content wrapped with security markers"
 
+    if semantic_warnings:
+        response["semantic_warnings"] = semantic_warnings
     if llm_warnings:
         response["llm_screen_warnings"] = llm_warnings
 

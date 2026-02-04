@@ -36,6 +36,13 @@ class SecurityConfig:
     custom_patterns: list[list[str]] = field(default_factory=list)
     # Format: [["regex", "category", "severity"], ...]
 
+    # === Semantic Similarity Settings ===
+    semantic_enabled: bool = True           # Enabled by default
+    semantic_model: str = "BAAI/bge-small-en-v1.5"  # fastembed transformer model
+    semantic_threshold: float = 0.72        # Global floor (per-pattern can be stricter)
+    semantic_top_k: int = 3                 # Number of nearest neighbors to check
+    semantic_custom_patterns_path: str = "" # Additional pattern bank (JSON)
+
     # === Caching Settings ===
     cache_enabled: bool = True
     cache_ttl_seconds: int = 900  # 15 minutes
