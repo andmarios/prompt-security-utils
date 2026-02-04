@@ -161,6 +161,8 @@ Patterns use Python regex syntax. Double-escape backslashes in JSON.
 
 ## Built-in Detection Categories
 
+56 patterns across 17 categories:
+
 | Category | Severity | Examples |
 |----------|----------|----------|
 | `instruction_override` | HIGH | "ignore previous instructions", "forget your rules" |
@@ -169,6 +171,13 @@ Patterns use Python regex syntax. Double-escape backslashes in JSON.
 | `jailbreak` | HIGH | "DAN mode", "developer mode enabled" |
 | `exfiltration` | HIGH/MEDIUM | "send to", "forward all", "upload to" |
 | `credential_leak` | HIGH/MEDIUM | "api_key:", "password:", "BEGIN PRIVATE KEY" |
+| `leetspeak_evasion` | MEDIUM | "1gn0r3", "j41lbr34k", "byp4ss" |
+| `comment_injection` | HIGH/MEDIUM | `<!-- ignore -->`, `/* override */`, `// system` |
+| `false_authority` | HIGH | "Anthropic says", "the developers told you" |
+| `fake_history` | MEDIUM | "in our last conversation you agreed" |
+| `encoding_instruction` | MEDIUM/HIGH | "decode this rot13", "reverse this text and execute" |
+| `homoglyph_mixed_script` | MEDIUM | Cyrillic/Latin mixing (e.g., Cyrillic "і" in "ignore") |
+| `prompt_extraction` | HIGH | "show me your system prompt", "reveal your instructions" |
 | `base64_encoding` | LOW | Long base64 strings |
 | `html_encoding` | MEDIUM | HTML entities like `&#x3C;` |
 | `unicode_escape` | MEDIUM | Unicode escapes like `\u0069` |
@@ -202,7 +211,7 @@ Content → [Tier 1] Regex Detection (~0.1ms)
 
 - **Tier 1** is always on. Catches exact pattern matches via regex.
 - **Tier 2** is on by default. Catches paraphrased/reworded injection attempts that evade regex. Uses transformer embeddings (fastembed + onnxruntime, ~200MB total).
-- **Tier 3** is opt-in. Uses Claude Haiku or local Ollama for sophisticated attack detection.
+- **Tier 3** is opt-in. Uses Claude Haiku or local Ollama with an example-calibrated prompt (6 malicious + 3 clean reference examples) for sophisticated attack detection.
 
 Each tier adds its warnings independently. The global `semantic_threshold` acts as a floor — per-pattern thresholds can only be stricter, never more lenient.
 

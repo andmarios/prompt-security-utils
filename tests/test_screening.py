@@ -260,6 +260,32 @@ def test_harmlessness_prompt_format():
     assert "test" in formatted
 
 
+def test_prompt_has_calibration_examples():
+    """Verify prompt contains both malicious and clean calibration examples."""
+    # Should have high-confidence malicious examples
+    assert "0.95" in HARMLESSNESS_PROMPT
+    assert "0.90" in HARMLESSNESS_PROMPT
+    # Should have clean examples scored at 0.0
+    assert "0.0" in HARMLESSNESS_PROMPT
+    # Should still have the JSON response format
+    assert "injection_detected" in HARMLESSNESS_PROMPT
+
+
+def test_prompt_covers_key_attack_types():
+    """Verify calibration examples cover key attack vectors."""
+    prompt_lower = HARMLESSNESS_PROMPT.lower()
+    # Instruction override
+    assert "ignore all previous instructions" in prompt_lower
+    # Jailbreak / DAN
+    assert "dan" in prompt_lower
+    # Code comment injection
+    assert "<!--" in HARMLESSNESS_PROMPT
+    # False authority
+    assert "anthropic" in prompt_lower
+    # Exfiltration
+    assert "forward" in prompt_lower or "external-server" in prompt_lower
+
+
 class TestSplitIntoChunks:
     """Test _split_into_chunks function."""
 

@@ -84,6 +84,41 @@ SUSPICIOUS_PATTERNS: list[tuple[str, str, Severity]] = [
     (r"\\u[0-9a-fA-F]{4}", "unicode_escape", Severity.MEDIUM),  # Unicode escapes
     (r"[\u200b-\u200f\u2060\ufeff]", "invisible_chars", Severity.MEDIUM),  # Zero-width chars
     (r"%[0-9a-fA-F]{2}", "url_encoding", Severity.LOW),  # URL encoding
+
+    # === LEETSPEAK EVASION (MEDIUM) ===
+    (r"\b[i1!][gq9][n][o0][r][e3]\b", "leetspeak_evasion", Severity.MEDIUM),
+    (r"\b[f][o0][r][gq9][e3][t7]\b", "leetspeak_evasion", Severity.MEDIUM),
+    (r"\b[j][a4@][i1!][l][b][r][e3][a4@][k]\b", "leetspeak_evasion", Severity.MEDIUM),
+    (r"\b[b][y][p][a4@][s5$]{2}\b", "leetspeak_evasion", Severity.MEDIUM),
+    (r"\b[o0][v][e3][r][r][i1!][d][e3]\b", "leetspeak_evasion", Severity.MEDIUM),
+
+    # === CODE COMMENT INJECTION (HIGH/MEDIUM) ===
+    (r"<!--\s*(ignore|forget|override|disregard|system|new instructions)", "comment_injection", Severity.HIGH),
+    (r"/\*\s*(ignore|forget|override|disregard|system|new instructions)", "comment_injection", Severity.HIGH),
+    (r"//\s*(ignore|forget|override|disregard|system|new instructions)", "comment_injection", Severity.HIGH),
+    (r"#\s*(ignore|forget|override|system prompt|new instructions)", "comment_injection", Severity.MEDIUM),
+
+    # === FALSE AUTHORITY (HIGH) ===
+    (r"(anthropic|openai|google|meta)\s+(says?|requires?|instructed|told|wants)", "false_authority", Severity.HIGH),
+    (r"(the\s+developers?|the\s+creators?|the\s+team)\s+(said|wants?|instructed|told)\s+(you|me)", "false_authority", Severity.HIGH),
+    (r"(official|authorized|admin)\s+(update|override|instruction|message)", "false_authority", Severity.HIGH),
+
+    # === FAKE CONVERSATION HISTORY (MEDIUM) ===
+    (r"(in\s+our|in\s+the)\s+(last|previous|earlier|prior)\s+(conversation|chat|session)\s+(you|we)\s+(agreed|said|promised|confirmed)", "fake_history", Severity.MEDIUM),
+    (r"(you\s+previously|you\s+already)\s+(agreed|confirmed|promised|said)\s+(to|that|you)", "fake_history", Severity.MEDIUM),
+    (r"(as\s+we\s+discussed|as\s+agreed)\s+(earlier|before|previously)", "fake_history", Severity.MEDIUM),
+
+    # === ENCODING/CIPHER INSTRUCTIONS (MEDIUM/HIGH) ===
+    (r"(decode|decrypt|decipher)\s+(this|the\s+following)\s+(rot13|base64|hex|cipher|encoded)", "encoding_instruction", Severity.MEDIUM),
+    (r"(reverse|read\s+backwards?)\s+(this|the\s+following)\s+(text|string|message)\s+.{0,20}(execute|follow|run)", "encoding_instruction", Severity.HIGH),
+    (r"(first\s+letter|acrostic|hidden\s+message|steganograph)", "encoding_instruction", Severity.MEDIUM),
+
+    # === HOMOGLYPH / MIXED-SCRIPT DETECTION (MEDIUM) ===
+    (r"[\u0400-\u04FF].*[\u0041-\u005A\u0061-\u007A]|[\u0041-\u005A\u0061-\u007A].*[\u0400-\u04FF]", "homoglyph_mixed_script", Severity.MEDIUM),
+
+    # === PROMPT EXTRACTION (HIGH) ===
+    (r"(show|reveal|display|print|output|repeat|echo)\s+.{0,10}(system\s*prompt|instructions|initial\s*prompt|rules|guidelines)", "prompt_extraction", Severity.HIGH),
+    (r"what\s+(are|were)\s+your\s+(initial|original|system)\s+(instructions?|prompt|rules)", "prompt_extraction", Severity.HIGH),
 ]
 
 
