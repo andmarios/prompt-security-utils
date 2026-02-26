@@ -46,7 +46,7 @@ response = output_external_content(
 
 ## Configuration
 
-Settings are stored in `~/.claude/.prompt-security/config.json`. This library provides **core security settings only**. Service-specific settings (allowlists, disabled operations) belong in the consuming applications.
+Settings are stored in `~/.config/prompt-security-utils/config.json`. This library provides **core security settings only**. Service-specific settings (allowlists, disabled operations) belong in the consuming applications.
 
 ### Configuration File
 

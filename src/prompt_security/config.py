@@ -14,7 +14,8 @@ class SecurityConfig:
     consuming services (e.g., google-workspace, zendesk-skill).
     """
 
-    CONFIG_PATH: ClassVar[Path] = Path.home() / ".claude" / ".prompt-security" / "config.json"
+    CONFIG_PATH: ClassVar[Path] = Path.home() / ".config" / "prompt-security-utils" / "config.json"
+    _LEGACY_CONFIG_PATH: ClassVar[Path] = Path.home() / ".claude" / ".prompt-security" / "config.json"
 
     # === Content Markers ===
     # IMPORTANT: Change these from defaults to prevent marker injection attacks
@@ -54,6 +55,24 @@ class SecurityConfig:
 
         Unknown fields in the config file are ignored to allow graceful migration.
         """
+        # Migrate from old location if needed
+        if cls._LEGACY_CONFIG_PATH.exists() and not cls.CONFIG_PATH.exists():
+            import shutil
+            import sys
+            try:
+                cls.CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(cls._LEGACY_CONFIG_PATH, cls.CONFIG_PATH)
+                print(
+                    f"[prompt-security-utils] Migrated config from "
+                    f"{cls._LEGACY_CONFIG_PATH} to {cls.CONFIG_PATH}",
+                    file=sys.stderr,
+                )
+            except OSError as e:
+                print(
+                    f"[prompt-security-utils] Warning: failed to migrate config: {e}",
+                    file=sys.stderr,
+                )
+
         if cls.CONFIG_PATH.exists():
             try:
                 with open(cls.CONFIG_PATH) as f:

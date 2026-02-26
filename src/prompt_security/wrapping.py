@@ -60,7 +60,7 @@ def wrap_untrusted_content(
         Dict with security markers that Claude understands as data boundaries
 
     Note:
-        For better security, configure custom markers in ~/.claude/.mcp-security/config.json
+        For better security, configure custom markers in ~/.config/prompt-security-utils/config.json
         since this repo is open source and attackers can see the default markers.
 
     Example:
