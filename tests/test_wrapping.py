@@ -139,7 +139,7 @@ def test_wrap_untrusted_content_custom_markers():
 
 def test_wrap_untrusted_content_default_markers_when_none():
     """Verify default markers are used when custom markers are None."""
-    from prompt_security.wrapping import DEFAULT_START_MARKER, DEFAULT_END_MARKER
+    from prompt_security.wrapping import CONTENT_START_MARKER, CONTENT_END_MARKER
 
     result = wrap_untrusted_content(
         "test",
@@ -149,13 +149,13 @@ def test_wrap_untrusted_content_default_markers_when_none():
         end_marker=None,
     )
 
-    assert result["content_start_marker"] == DEFAULT_START_MARKER
-    assert result["content_end_marker"] == DEFAULT_END_MARKER
+    assert result["content_start_marker"] == CONTENT_START_MARKER
+    assert result["content_end_marker"] == CONTENT_END_MARKER
 
 
 def test_wrap_untrusted_content_mixed_custom_default():
     """Verify mixing custom and default markers works."""
-    from prompt_security.wrapping import DEFAULT_START_MARKER, DEFAULT_END_MARKER
+    from prompt_security.wrapping import CONTENT_START_MARKER, CONTENT_END_MARKER
 
     custom_start = "<<<MY_CUSTOM_START>>>"
 
@@ -168,4 +168,4 @@ def test_wrap_untrusted_content_mixed_custom_default():
     )
 
     assert result["content_start_marker"] == custom_start
-    assert result["content_end_marker"] == DEFAULT_END_MARKER
+    assert result["content_end_marker"] == CONTENT_END_MARKER

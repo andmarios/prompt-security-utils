@@ -192,8 +192,8 @@ This library provides core security functionality. Consuming services implement 
 - **Operation toggles** - Fine-grained control per operation
 
 See the documentation for each consuming service:
-- [google-workspace](https://github.com/your-username/google-workspace) - Google Docs, Gmail, etc.
-- [zendesk-skill](https://github.com/your-username/zendesk-skill) - Zendesk tickets
+- [google-workspace-skill](https://github.com/andmarios/google-workspace-skill) - Google Docs, Gmail, etc.
+- [zendesk-skill](https://github.com/andmarios/zendesk-skill) - Zendesk tickets
 
 ## Detection Pipeline
 

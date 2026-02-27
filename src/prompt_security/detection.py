@@ -160,17 +160,14 @@ def detect_suspicious_content(
                 severity = Severity(severity.lower())
             all_patterns.append((pattern, category, severity))
 
-    # Case-insensitive search
-    content_lower = content.lower()
-
     for pattern, category, severity in all_patterns:
         try:
-            for match in re.finditer(pattern, content_lower, re.IGNORECASE | re.MULTILINE):
+            for match in re.finditer(pattern, content, re.IGNORECASE | re.MULTILINE):
                 results.append(DetectionResult(
                     pattern=pattern,
                     category=category,
                     severity=severity,
-                    matched_text=content[match.start():match.end()],  # Original case
+                    matched_text=match.group(),
                     start_pos=match.start(),
                     end_pos=match.end(),
                 ))

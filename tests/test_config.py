@@ -10,7 +10,7 @@ from prompt_security.config import SecurityConfig, load_config, save_config
 @pytest.fixture
 def temp_config_path(tmp_path):
     """Create temporary config path."""
-    config_path = tmp_path / ".claude" / ".mcp-security" / "config.json"
+    config_path = tmp_path / ".config" / "prompt-security-utils" / "config.json"
     with patch.object(SecurityConfig, "CONFIG_PATH", config_path):
         yield config_path
 

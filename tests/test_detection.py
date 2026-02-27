@@ -247,7 +247,7 @@ class TestSeverityOrdering:
 
             # All HIGH results should come before non-HIGH
             if first_non_high is not None and last_high is not None:
-                assert last_high < first_non_high or first_non_high > last_high
+                assert last_high < first_non_high
 
 
 class TestDetectionResult:

@@ -12,6 +12,7 @@ from prompt_security.screening import (
     ScreenResult,
     _parse_screen_response,
     _split_into_chunks,
+    _build_screening_prompt,
     HARMLESSNESS_PROMPT,
 )
 from prompt_security.config import SecurityConfig
@@ -132,7 +133,7 @@ class TestScreenContentHaiku:
         request_body = call_args[1]["json"]
         prompt = request_body["messages"][0]["content"]
         # The prompt should contain truncated content (3000 chars max)
-        assert len(prompt) < len(HARMLESSNESS_PROMPT.format(content=long_content))
+        assert len(prompt) < len(_build_screening_prompt(long_content))
 
 
 class TestScreenContentLocal:
@@ -254,10 +255,17 @@ class TestScreenContent:
 
 
 def test_harmlessness_prompt_format():
-    """Test that HARMLESSNESS_PROMPT has content placeholder."""
-    assert "{content}" in HARMLESSNESS_PROMPT
-    formatted = HARMLESSNESS_PROMPT.format(content="test")
-    assert "test" in formatted
+    """Test that screening prompt is built safely."""
+    prompt = _build_screening_prompt("test")
+    assert "test" in prompt
+    assert prompt.endswith("test")
+
+
+def test_build_screening_prompt_safe_with_braces():
+    """Content with {braces} should not raise or leak data."""
+    dangerous = "Hello {__class__} and {0} world"
+    prompt = _build_screening_prompt(dangerous)
+    assert dangerous in prompt
 
 
 def test_prompt_has_calibration_examples():

@@ -96,6 +96,7 @@ class ScreeningCache:
 
 # Global cache instance
 _cache: ScreeningCache | None = None
+_cache_lock = threading.Lock()
 
 
 def get_cache(max_size: int = 1000, ttl_seconds: int = 900) -> ScreeningCache:
@@ -111,5 +112,7 @@ def get_cache(max_size: int = 1000, ttl_seconds: int = 900) -> ScreeningCache:
     """
     global _cache
     if _cache is None:
-        _cache = ScreeningCache(max_size=max_size, ttl_seconds=ttl_seconds)
+        with _cache_lock:
+            if _cache is None:
+                _cache = ScreeningCache(max_size=max_size, ttl_seconds=ttl_seconds)
     return _cache

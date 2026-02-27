@@ -267,11 +267,11 @@ class TestWrapFieldCustomMarkers:
 
     def test_default_markers_when_not_configured(self):
         """Test that default markers are used when not configured."""
-        from prompt_security.wrapping import DEFAULT_START_MARKER, DEFAULT_END_MARKER
+        from prompt_security.wrapping import CONTENT_START_MARKER, CONTENT_END_MARKER
 
         config = SecurityConfig()  # Uses defaults
 
         result = wrap_field("test content", "email", "msg123", config)
 
-        assert result["content_start_marker"] == DEFAULT_START_MARKER
-        assert result["content_end_marker"] == DEFAULT_END_MARKER
+        assert result["content_start_marker"] == CONTENT_START_MARKER
+        assert result["content_end_marker"] == CONTENT_END_MARKER
