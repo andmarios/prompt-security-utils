@@ -3,8 +3,6 @@
 from prompt_security.wrapping import (
     wrap_untrusted_content,
     WrappedContent,
-    CONTENT_START_MARKER,
-    CONTENT_END_MARKER,
 )
 
 
@@ -48,20 +46,34 @@ def test_wrap_untrusted_content_sets_source_id():
     assert result["source_id"] == "unique-id-123"
 
 
-def test_markers_are_distinctive():
-    """Verify markers are unlikely to appear in normal content."""
-    # Markers should contain special character sequences
-    assert "<<<" in CONTENT_START_MARKER
-    assert ">>>" in CONTENT_START_MARKER
-    assert "<<<" in CONTENT_END_MARKER
-    assert ">>>" in CONTENT_END_MARKER
+def test_markers_are_random_per_call():
+    """Verify each call generates fresh random markers."""
+    r1 = wrap_untrusted_content("test", "email", "msg1")
+    r2 = wrap_untrusted_content("test", "email", "msg2")
 
-    # Markers should be different from each other
-    assert CONTENT_START_MARKER != CONTENT_END_MARKER
+    assert r1["content_start_marker"] != r2["content_start_marker"]
+    assert r1["content_end_marker"] != r2["content_end_marker"]
 
-    # Markers should contain descriptive text
-    assert "EXTERNAL" in CONTENT_START_MARKER
-    assert "END" in CONTENT_END_MARKER
+
+def test_start_and_end_markers_are_different():
+    """Verify start and end markers use different random IDs."""
+    result = wrap_untrusted_content("test", "email", "msg123")
+
+    assert result["content_start_marker"] != result["content_end_marker"]
+    # They should have different hex IDs (not just different prefixes)
+    start_id = result["content_start_marker"].replace("<<<EXTERNAL_CONTENT_", "").replace(">>>", "")
+    end_id = result["content_end_marker"].replace("<<<END_EXTERNAL_CONTENT_", "").replace(">>>", "")
+    assert start_id != end_id
+
+
+def test_markers_follow_template_pattern():
+    """Verify markers follow the expected template."""
+    result = wrap_untrusted_content("test", "email", "msg123")
+
+    assert result["content_start_marker"].startswith("<<<EXTERNAL_CONTENT_")
+    assert result["content_start_marker"].endswith(">>>")
+    assert result["content_end_marker"].startswith("<<<END_EXTERNAL_CONTENT_")
+    assert result["content_end_marker"].endswith(">>>")
 
 
 def test_wrapped_content_dataclass():
@@ -71,9 +83,9 @@ def test_wrapped_content_dataclass():
         source_type="email",
         source_id="msg123",
         warning="test warning",
-        content_start_marker=CONTENT_START_MARKER,
+        content_start_marker="<<<START>>>",
         data="test data",
-        content_end_marker=CONTENT_END_MARKER,
+        content_end_marker="<<<END>>>",
     )
 
     assert wrapped.trust_level == "external"
@@ -87,9 +99,9 @@ def test_wrapped_content_to_dict():
         source_type="email",
         source_id="msg123",
         warning="test warning",
-        content_start_marker=CONTENT_START_MARKER,
+        content_start_marker="<<<START>>>",
         data="test data",
-        content_end_marker=CONTENT_END_MARKER,
+        content_end_marker="<<<END>>>",
     )
 
     result = wrapped.to_dict()
@@ -118,54 +130,3 @@ def test_wrap_untrusted_content_warning_message():
 
     assert "EXTERNAL" in warning.upper()
     assert "data" in warning.lower() or "DATA" in warning
-
-
-def test_wrap_untrusted_content_custom_markers():
-    """Verify custom markers can be provided."""
-    custom_start = "<<<CUSTOM_START_xyz123>>>"
-    custom_end = "<<<CUSTOM_END_xyz123>>>"
-
-    result = wrap_untrusted_content(
-        "test content",
-        "email",
-        "msg123",
-        start_marker=custom_start,
-        end_marker=custom_end,
-    )
-
-    assert result["content_start_marker"] == custom_start
-    assert result["content_end_marker"] == custom_end
-
-
-def test_wrap_untrusted_content_default_markers_when_none():
-    """Verify default markers are used when custom markers are None."""
-    from prompt_security.wrapping import CONTENT_START_MARKER, CONTENT_END_MARKER
-
-    result = wrap_untrusted_content(
-        "test",
-        "email",
-        "msg123",
-        start_marker=None,
-        end_marker=None,
-    )
-
-    assert result["content_start_marker"] == CONTENT_START_MARKER
-    assert result["content_end_marker"] == CONTENT_END_MARKER
-
-
-def test_wrap_untrusted_content_mixed_custom_default():
-    """Verify mixing custom and default markers works."""
-    from prompt_security.wrapping import CONTENT_START_MARKER, CONTENT_END_MARKER
-
-    custom_start = "<<<MY_CUSTOM_START>>>"
-
-    result = wrap_untrusted_content(
-        "test",
-        "email",
-        "msg123",
-        start_marker=custom_start,
-        end_marker=None,  # Use default
-    )
-
-    assert result["content_start_marker"] == custom_start
-    assert result["content_end_marker"] == CONTENT_END_MARKER

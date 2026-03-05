@@ -21,6 +21,22 @@ class TestWrapField:
         assert result["source_id"] == "msg123"
         assert result["data"] == "test content"
 
+    def test_generates_random_markers(self):
+        """Test that each wrap_field call gets fresh random markers."""
+        config = SecurityConfig()
+        r1 = wrap_field("content1", "email", "msg1", config)
+        r2 = wrap_field("content2", "email", "msg2", config)
+
+        assert r1["content_start_marker"] != r2["content_start_marker"]
+        assert r1["content_end_marker"] != r2["content_end_marker"]
+
+    def test_start_end_markers_differ(self):
+        """Test that start and end markers are different."""
+        config = SecurityConfig()
+        result = wrap_field("test", "email", "msg123", config)
+
+        assert result["content_start_marker"] != result["content_end_marker"]
+
     def test_skip_wrapping_returns_unwrapped(self):
         """Test that skip_wrapping=True returns content unwrapped."""
         config = SecurityConfig()
@@ -148,6 +164,22 @@ class TestOutputExternalContent:
         assert "trust_level" in result["subject"]
         assert "trust_level" in result["body"]
 
+    def test_each_field_gets_different_markers(self):
+        """Test that each wrapped field gets its own unique markers."""
+        config = SecurityConfig()
+        result = output_external_content(
+            operation="gmail.read",
+            source_type="email",
+            source_id="msg123",
+            content_fields={
+                "subject": "Test Subject",
+                "body": "Test Body",
+            },
+            config=config,
+        )
+
+        assert result["subject"]["content_start_marker"] != result["body"]["content_start_marker"]
+
     def test_extra_kwargs(self):
         """Test that extra kwargs are passed through."""
         config = SecurityConfig()
@@ -226,52 +258,3 @@ class TestOutputExternalContent:
         assert result["status"] == "success"
         # No security note when no content
         assert "security_note" not in result or result.get("security_note") is None
-
-    def test_custom_markers_from_config(self):
-        """Test that custom markers from config are used."""
-        custom_start = "«««MY_SECRET_START»»»"
-        custom_end = "«««MY_SECRET_END»»»"
-        config = SecurityConfig(
-            content_start_marker=custom_start,
-            content_end_marker=custom_end,
-        )
-
-        result = output_external_content(
-            operation="gmail.read",
-            source_type="email",
-            source_id="msg123",
-            content_fields={"body": "Hello"},
-            config=config,
-        )
-
-        assert result["body"]["content_start_marker"] == custom_start
-        assert result["body"]["content_end_marker"] == custom_end
-
-
-class TestWrapFieldCustomMarkers:
-    """Test custom marker support in wrap_field."""
-
-    def test_uses_config_markers(self):
-        """Test that wrap_field uses markers from config."""
-        custom_start = "<<<SECRET_START_abc123>>>"
-        custom_end = "<<<SECRET_END_abc123>>>"
-        config = SecurityConfig(
-            content_start_marker=custom_start,
-            content_end_marker=custom_end,
-        )
-
-        result = wrap_field("test content", "email", "msg123", config)
-
-        assert result["content_start_marker"] == custom_start
-        assert result["content_end_marker"] == custom_end
-
-    def test_default_markers_when_not_configured(self):
-        """Test that default markers are used when not configured."""
-        from prompt_security.wrapping import CONTENT_START_MARKER, CONTENT_END_MARKER
-
-        config = SecurityConfig()  # Uses defaults
-
-        result = wrap_field("test content", "email", "msg123", config)
-
-        assert result["content_start_marker"] == CONTENT_START_MARKER
-        assert result["content_end_marker"] == CONTENT_END_MARKER

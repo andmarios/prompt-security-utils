@@ -3,8 +3,6 @@
 from prompt_security.wrapping import (
     wrap_untrusted_content,
     WrappedContent,
-    CONTENT_START_MARKER,
-    CONTENT_END_MARKER,
 )
 from prompt_security.detection import (
     detect_suspicious_content,
@@ -28,7 +26,6 @@ from prompt_security.config import (
     SecurityConfig,
     load_config,
     save_config,
-    generate_markers,
 )
 from prompt_security.cache import (
     ScreeningCache,
@@ -44,8 +41,6 @@ __all__ = [
     # Wrapping
     "wrap_untrusted_content",
     "WrappedContent",
-    "CONTENT_START_MARKER",
-    "CONTENT_END_MARKER",
     # Detection
     "detect_suspicious_content",
     "DetectionResult",
@@ -65,7 +60,6 @@ __all__ = [
     "SecurityConfig",
     "load_config",
     "save_config",
-    "generate_markers",
     # Cache
     "ScreeningCache",
     "get_cache",
@@ -75,4 +69,4 @@ __all__ = [
     "wrap_fields",
 ]
 
-__version__ = "0.1.0"
+__version__ = "1.1.0"

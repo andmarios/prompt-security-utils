@@ -52,8 +52,6 @@ Settings are stored in `~/.config/prompt-security-utils/config.json`. This libra
 
 ```json
 {
-  "content_start_marker": "<<<EXTERNAL_CONTENT>>>",
-  "content_end_marker": "<<<END_EXTERNAL_CONTENT>>>",
   "detection_enabled": true,
   "custom_patterns": [],
   "semantic_enabled": true,
@@ -78,23 +76,7 @@ Settings are stored in `~/.config/prompt-security-utils/config.json`. This libra
 
 ### Content Markers
 
-Markers wrap external content to help LLMs distinguish data from instructions.
-
-| Setting | Type | Default | Description |
-|---------|------|---------|-------------|
-| `content_start_marker` | string | `"<<<EXTERNAL_CONTENT>>>"` | Marker before untrusted content |
-| `content_end_marker` | string | `"<<<END_EXTERNAL_CONTENT>>>"` | Marker after untrusted content |
-
-**Security Note:** This library is open source, so the default markers are publicly known. Attackers could craft content containing these exact markers to escape the data boundary. Configure custom, secret markers unique to your deployment:
-
-```json
-{
-  "content_start_marker": "«««UNTRUSTED_xyz123»»»",
-  "content_end_marker": "«««END_UNTRUSTED_xyz123»»»"
-}
-```
-
-Use markers that are unlikely to appear in normal content and include random characters.
+Markers wrap external content to help LLMs distinguish data from instructions. Fresh random markers are generated on every call — start and end markers use independent random IDs. The markers are returned in the response as `content_start_marker` and `content_end_marker` so consumers can identify them.
 
 ### LLM Screening
 
