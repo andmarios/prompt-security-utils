@@ -26,6 +26,8 @@ from prompt_security.config import (
     SecurityConfig,
     load_config,
     save_config,
+    generate_markers,
+    security_instructions,
 )
 from prompt_security.cache import (
     ScreeningCache,
@@ -60,6 +62,8 @@ __all__ = [
     "SecurityConfig",
     "load_config",
     "save_config",
+    "generate_markers",
+    "security_instructions",
     # Cache
     "ScreeningCache",
     "get_cache",
@@ -69,4 +73,4 @@ __all__ = [
     "wrap_fields",
 ]
 
-__version__ = "1.1.0"
+__version__ = "1.2.0"

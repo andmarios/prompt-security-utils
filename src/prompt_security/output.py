@@ -13,6 +13,8 @@ def wrap_field(
     content: str,
     source_type: str,
     source_id: str,
+    start_marker: str,
+    end_marker: str,
     config: SecurityConfig | None = None,
     skip_wrapping: bool = False,
 ) -> dict[str, Any]:
@@ -23,6 +25,8 @@ def wrap_field(
         content: The content to wrap
         source_type: Type of source ("email", "document", etc.)
         source_id: Unique identifier for the source
+        start_marker: Session start marker (established via trusted channel)
+        end_marker: Session end marker (established via trusted channel)
         config: Security config (loads from file if not provided)
         skip_wrapping: If True, return content unwrapped (caller handles allowlisting)
 
@@ -36,8 +40,8 @@ def wrap_field(
     if skip_wrapping:
         return {"data": content, "allowlisted": True}
 
-    # Wrap the content (markers are generated per-call)
-    wrapped = wrap_untrusted_content(content, source_type, source_id)
+    # Wrap the content using the session markers
+    wrapped = wrap_untrusted_content(content, source_type, source_id, start_marker, end_marker)
 
     # Run detection if enabled
     warnings: list[dict[str, Any]] = []
@@ -82,6 +86,8 @@ def wrap_fields(
     fields: list[str],
     source_type: str,
     source_id: str,
+    start_marker: str,
+    end_marker: str,
     config: SecurityConfig | None = None,
 ) -> dict[str, Any]:
     """
@@ -92,6 +98,8 @@ def wrap_fields(
         fields: List of field names to wrap
         source_type: Type of source
         source_id: Unique identifier
+        start_marker: Session start marker (established via trusted channel)
+        end_marker: Session end marker (established via trusted channel)
         config: Security config
 
     Returns:
@@ -107,6 +115,8 @@ def wrap_fields(
                 data[field_name],
                 source_type,
                 source_id,
+                start_marker,
+                end_marker,
                 config,
             )
     return result
@@ -117,6 +127,8 @@ def output_external_content(
     source_type: str,
     source_id: str,
     content_fields: dict[str, str],
+    start_marker: str,
+    end_marker: str,
     config: SecurityConfig | None = None,
     skip_wrapping: bool = False,
     **kwargs: Any,
@@ -130,6 +142,8 @@ def output_external_content(
         source_id: Unique identifier
         content_fields: Dict mapping field names to content
                        e.g., {"body": "email body", "subject": "email subject"}
+        start_marker: Session start marker (established via trusted channel)
+        end_marker: Session end marker (established via trusted channel)
         config: Security config (loads from file if not provided)
         skip_wrapping: If True, return content unwrapped (caller handles allowlisting)
         **kwargs: Additional fields to include in response
@@ -138,11 +152,14 @@ def output_external_content(
         Response dict ready for JSON output
 
     Example:
+        >>> start, end = generate_markers()
         >>> output_external_content(
         ...     operation="gmail.read",
         ...     source_type="email",
         ...     source_id="msg123",
         ...     content_fields={"body": "Hello!", "subject": "Test"},
+        ...     start_marker=start,
+        ...     end_marker=end,
         ...     from_address="sender@example.com",
         ... )
         {
@@ -174,13 +191,13 @@ def output_external_content(
         "source_id": source_id,
     }
 
-    # Wrap each content field
+    # Wrap each content field using the shared session markers
     all_warnings: list[dict[str, Any]] = []
     semantic_warnings: list[dict[str, Any]] = []
     llm_warnings: list[dict[str, Any]] = []
 
     for field_name, content in content_fields.items():
-        wrapped = wrap_field(content, source_type, source_id, config)
+        wrapped = wrap_field(content, source_type, source_id, start_marker, end_marker, config)
         response[field_name] = wrapped
 
         # Collect warnings

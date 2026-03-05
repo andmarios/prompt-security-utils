@@ -9,6 +9,7 @@ from prompt_security.config import (
     load_config,
     save_config,
     generate_markers,
+    security_instructions,
 )
 
 
@@ -168,3 +169,27 @@ def test_load_returns_default_when_no_config(temp_config_path):
     assert config.llm_screen_enabled is False
     # Should not create a config file automatically
     assert not temp_config_path.exists()
+
+
+def test_security_instructions_returns_string():
+    """Test that security_instructions returns a string."""
+    start, end = generate_markers()
+    result = security_instructions(start, end)
+    assert isinstance(result, str)
+
+
+def test_security_instructions_contains_markers():
+    """Test that security_instructions embeds the marker values."""
+    start, end = generate_markers()
+    result = security_instructions(start, end)
+    assert start in result
+    assert end in result
+
+
+def test_security_instructions_content():
+    """Test that security_instructions contains key guidance."""
+    start, end = generate_markers()
+    result = security_instructions(start, end)
+    # Should warn about treating content as data, not instructions
+    assert "DATA" in result.upper() or "data" in result
+    assert "instructions" in result.lower()

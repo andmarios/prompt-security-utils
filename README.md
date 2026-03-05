@@ -18,16 +18,27 @@ uv add prompt-security-utils
 
 ```python
 from prompt_security import (
+    generate_markers,
+    security_instructions,
     wrap_untrusted_content,
     detect_suspicious_content,
     output_external_content,
 )
 
-# Wrap external content with security markers
+# Generate session markers ONCE at startup
+start_marker, end_marker = generate_markers()
+
+# For MCP servers: pass security_instructions() to FastMCP so markers
+# reach the LLM via the trusted system prompt BEFORE any content is shown.
+# For CLI tools: markers are defense-in-depth (human controls the pipeline).
+
+# Wrap external content using the session markers
 wrapped = wrap_untrusted_content(
     content="Email body here...",
     source_type="email",
     source_id="msg123",
+    start_marker=start_marker,
+    end_marker=end_marker,
 )
 
 # Detect suspicious patterns
@@ -41,6 +52,8 @@ response = output_external_content(
     source_type="email",
     source_id="msg123",
     content_fields={"body": "email content", "subject": "subject line"},
+    start_marker=start_marker,
+    end_marker=end_marker,
 )
 ```
 
@@ -76,7 +89,39 @@ Settings are stored in `~/.config/prompt-security-utils/config.json`. This libra
 
 ### Content Markers
 
-Markers wrap external content to help LLMs distinguish data from instructions. Fresh random markers are generated on every call — start and end markers use independent random IDs. The markers are returned in the response as `content_start_marker` and `content_end_marker` so consumers can identify them.
+Markers wrap external content to help LLMs distinguish data from instructions.  The key security property is that markers must be established via a **trusted channel** (MCP `instructions` / system prompt) **before** any untrusted content appears.  An LLM that already knows the markers from its system prompt cannot be confused by an attacker who tries to forge or override them inside the content.
+
+**Architecture**:
+1. Call `generate_markers()` once at session/process start — returns `(start_marker, end_marker)` with independent random IDs.
+2. Deliver `security_instructions(start_marker, end_marker)` to the LLM via a trusted channel.
+3. Pass `start_marker` and `end_marker` to every `wrap_untrusted_content()` / `output_external_content()` call.
+
+**MCP server example** (markers arrive in system prompt via `InitializeResult.instructions`):
+
+```python
+from mcp.server.fastmcp import FastMCP
+from prompt_security import generate_markers, security_instructions
+
+_START, _END = generate_markers()
+mcp = FastMCP("my_service", instructions=security_instructions(_START, _END))
+```
+
+**CLI tool example** (defense-in-depth; human controls the pipeline):
+
+```python
+from prompt_security import generate_markers, output_external_content
+
+START, END = generate_markers()
+
+response = output_external_content(
+    operation="read",
+    source_type="email",
+    source_id="msg123",
+    content_fields={"body": content},
+    start_marker=START,
+    end_marker=END,
+)
+```
 
 ### LLM Screening
 

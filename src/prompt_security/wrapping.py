@@ -3,8 +3,6 @@
 from dataclasses import dataclass
 from typing import Any
 
-from prompt_security.config import generate_markers
-
 
 @dataclass
 class WrappedContent:
@@ -35,23 +33,28 @@ def wrap_untrusted_content(
     content: str,
     source_type: str,
     source_id: str,
+    start_marker: str,
+    end_marker: str,
 ) -> dict[str, Any]:
     """
     Wrap content with security metadata and delimiters.
 
-    Fresh random markers are generated on every call. The markers are
-    returned in the output as ``content_start_marker`` and
-    ``content_end_marker`` so consumers can identify them.
+    Markers must be generated once per session via ``generate_markers()`` and
+    communicated to the LLM through a trusted channel (MCP ``instructions`` /
+    system prompt) **before** any untrusted content appears.  Pass those
+    session markers here so every wrapped field uses the same values the LLM
+    already knows about.
 
     Args:
         content: The untrusted content to wrap
         source_type: Type of source ("email", "document", "spreadsheet", "slide", "ticket")
         source_id: Unique identifier for the source (document ID, message ID, etc.)
+        start_marker: Session start marker (established via trusted channel)
+        end_marker: Session end marker (established via trusted channel)
 
     Returns:
         Dict with security markers that Claude understands as data boundaries
     """
-    start_marker, end_marker = generate_markers()
     wrapped = WrappedContent(
         trust_level="external",
         source_type=source_type,
