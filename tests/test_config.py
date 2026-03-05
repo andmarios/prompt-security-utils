@@ -4,14 +4,25 @@ import json
 from unittest.mock import patch
 
 import pytest
-from prompt_security.config import SecurityConfig, load_config, save_config
+from prompt_security.config import (
+    SecurityConfig,
+    load_config,
+    save_config,
+    generate_markers,
+    _FALLBACK_START_MARKER,
+    _FALLBACK_END_MARKER,
+)
 
 
 @pytest.fixture
 def temp_config_path(tmp_path):
-    """Create temporary config path."""
+    """Create temporary config path with no legacy path."""
     config_path = tmp_path / ".config" / "prompt-security-utils" / "config.json"
-    with patch.object(SecurityConfig, "CONFIG_PATH", config_path):
+    legacy_path = tmp_path / ".claude" / ".prompt-security" / "config.json"
+    with (
+        patch.object(SecurityConfig, "CONFIG_PATH", config_path),
+        patch.object(SecurityConfig, "_LEGACY_CONFIG_PATH", legacy_path),
+    ):
         yield config_path
 
 
@@ -26,10 +37,44 @@ def test_config_default_values():
     assert config.custom_patterns == []
 
 
-def test_config_load_default(temp_config_path):
-    """Test loading default config when file doesn't exist."""
+def test_config_load_creates_randomized_markers(temp_config_path):
+    """Test that first load creates config with randomized markers."""
     config = SecurityConfig.load()
-    assert config.detection_enabled is True
+
+    # Markers should NOT be the fallback hardcoded values
+    assert config.content_start_marker != _FALLBACK_START_MARKER
+    assert config.content_end_marker != _FALLBACK_END_MARKER
+
+    # Markers should follow the template pattern
+    assert config.content_start_marker.startswith("<<<EXTERNAL_CONTENT_")
+    assert config.content_start_marker.endswith(">>>")
+    assert config.content_end_marker.startswith("<<<END_EXTERNAL_CONTENT_")
+    assert config.content_end_marker.endswith(">>>")
+
+    # Config file should have been auto-saved
+    assert temp_config_path.exists()
+
+
+def test_config_load_persists_markers(temp_config_path):
+    """Test that randomized markers persist across loads."""
+    first = SecurityConfig.load()
+    second = SecurityConfig.load()
+
+    assert first.content_start_marker == second.content_start_marker
+    assert first.content_end_marker == second.content_end_marker
+
+
+def test_config_load_unique_across_installs(temp_config_path):
+    """Test that different installs get different markers."""
+    first = SecurityConfig.load()
+
+    # Delete config to simulate a fresh install
+    temp_config_path.unlink()
+
+    second = SecurityConfig.load()
+
+    assert first.content_start_marker != second.content_start_marker
+    assert first.content_end_marker != second.content_end_marker
 
 
 def test_config_save_load_roundtrip(temp_config_path):
@@ -121,3 +166,35 @@ def test_config_creates_parent_dirs(temp_config_path):
 
     assert temp_config_path.parent.exists()
     assert temp_config_path.exists()
+
+
+def test_generate_markers_random():
+    """Test that generate_markers produces unique pairs."""
+    a_start, a_end = generate_markers()
+    b_start, b_end = generate_markers()
+
+    assert a_start != b_start
+    assert a_end != b_end
+    # Start and end in a pair share the same ID
+    assert a_start.replace("EXTERNAL_CONTENT_", "") == a_end.replace("END_EXTERNAL_CONTENT_", "")
+
+
+def test_generate_markers_fixed_id():
+    """Test that generate_markers accepts a fixed ID."""
+    start, end = generate_markers(marker_id="test123")
+
+    assert start == "<<<EXTERNAL_CONTENT_test123>>>"
+    assert end == "<<<END_EXTERNAL_CONTENT_test123>>>"
+
+
+def test_client_custom_markers_preserved(temp_config_path):
+    """Test that client-set custom markers survive save/load."""
+    config = SecurityConfig(
+        content_start_marker="<<<MY_APP_START>>>",
+        content_end_marker="<<<MY_APP_END>>>",
+    )
+    config.save()
+
+    loaded = SecurityConfig.load()
+    assert loaded.content_start_marker == "<<<MY_APP_START>>>"
+    assert loaded.content_end_marker == "<<<MY_APP_END>>>"

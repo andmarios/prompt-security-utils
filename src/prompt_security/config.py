@@ -1,9 +1,40 @@
 """Security configuration management."""
 
 import json
+import secrets
 from dataclasses import dataclass, field, fields, asdict
 from pathlib import Path
 from typing import ClassVar
+
+# Base marker templates — the {id} is replaced with a random hex string
+_MARKER_START_TEMPLATE = "<<<EXTERNAL_CONTENT_{id}>>>"
+_MARKER_END_TEMPLATE = "<<<END_EXTERNAL_CONTENT_{id}>>>"
+
+# Fallback markers used when SecurityConfig() is constructed directly
+# without going through load(). Prefer load() for randomized markers.
+_FALLBACK_START_MARKER = "<<<EXTERNAL_CONTENT>>>"
+_FALLBACK_END_MARKER = "<<<END_EXTERNAL_CONTENT>>>"
+
+
+def _generate_marker_id() -> str:
+    """Generate a random hex string for marker uniqueness."""
+    return secrets.token_hex(8)
+
+
+def generate_markers(marker_id: str | None = None) -> tuple[str, str]:
+    """Generate a pair of unique content markers.
+
+    Args:
+        marker_id: Optional fixed ID. If None, a random one is generated.
+
+    Returns:
+        Tuple of (start_marker, end_marker).
+    """
+    mid = marker_id or _generate_marker_id()
+    return (
+        _MARKER_START_TEMPLATE.format(id=mid),
+        _MARKER_END_TEMPLATE.format(id=mid),
+    )
 
 
 @dataclass
@@ -18,10 +49,9 @@ class SecurityConfig:
     _LEGACY_CONFIG_PATH: ClassVar[Path] = Path.home() / ".claude" / ".prompt-security" / "config.json"
 
     # === Content Markers ===
-    # IMPORTANT: Change these from defaults to prevent marker injection attacks
-    # Use unique, secret values that attackers cannot guess
-    content_start_marker: str = "<<<EXTERNAL_CONTENT>>>"
-    content_end_marker: str = "<<<END_EXTERNAL_CONTENT>>>"
+    # Randomized automatically on first load(). Clients can override these.
+    content_start_marker: str = _FALLBACK_START_MARKER
+    content_end_marker: str = _FALLBACK_END_MARKER
 
     # === LLM Screening Settings ===
     llm_screen_enabled: bool = False  # Disabled by default (opt-in)
@@ -84,7 +114,19 @@ class SecurityConfig:
             except (json.JSONDecodeError, TypeError):
                 # Invalid config, return default
                 return cls()
-        return cls()
+
+        # No config file exists — create one with randomized markers
+        start, end = generate_markers()
+        config = cls(content_start_marker=start, content_end_marker=end)
+        try:
+            config.save()
+        except OSError as e:
+            import sys
+            print(
+                f"[prompt-security-utils] Warning: could not save initial config: {e}",
+                file=sys.stderr,
+            )
+        return config
 
     def save(self) -> None:
         """Save configuration to file."""

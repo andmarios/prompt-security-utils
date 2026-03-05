@@ -28,6 +28,7 @@ from prompt_security.config import (
     SecurityConfig,
     load_config,
     save_config,
+    generate_markers,
 )
 from prompt_security.cache import (
     ScreeningCache,
@@ -64,6 +65,7 @@ __all__ = [
     "SecurityConfig",
     "load_config",
     "save_config",
+    "generate_markers",
     # Cache
     "ScreeningCache",
     "get_cache",
