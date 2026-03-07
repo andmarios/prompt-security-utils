@@ -2,6 +2,8 @@
 
 from prompt_security.wrapping import (
     wrap_untrusted_content,
+    wrap_external_data,
+    read_and_wrap_file,
     WrappedContent,
 )
 from prompt_security.detection import (
@@ -42,6 +44,8 @@ from prompt_security.output import (
 __all__ = [
     # Wrapping
     "wrap_untrusted_content",
+    "wrap_external_data",
+    "read_and_wrap_file",
     "WrappedContent",
     # Detection
     "detect_suspicious_content",
@@ -73,4 +77,4 @@ __all__ = [
     "wrap_fields",
 ]
 
-__version__ = "1.2.0"
+__version__ = "1.3.0"

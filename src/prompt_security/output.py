@@ -10,19 +10,19 @@ from prompt_security.config import SecurityConfig, load_config
 
 
 def wrap_field(
-    content: str,
+    content: str | None,
     source_type: str,
     source_id: str,
     start_marker: str,
     end_marker: str,
     config: SecurityConfig | None = None,
     skip_wrapping: bool = False,
-) -> dict[str, Any]:
+) -> dict[str, Any] | None:
     """
     Wrap a single field with security markers and detection.
 
     Args:
-        content: The content to wrap
+        content: The content to wrap, or None for optional fields
         source_type: Type of source ("email", "document", etc.)
         source_id: Unique identifier for the source
         start_marker: Session start marker (established via trusted channel)
@@ -31,8 +31,11 @@ def wrap_field(
         skip_wrapping: If True, return content unwrapped (caller handles allowlisting)
 
     Returns:
-        Dict with wrapped content and any security warnings
+        Dict with wrapped content and any security warnings, or None if content is None
     """
+    if content is None:
+        return None
+
     if config is None:
         config = load_config()
 

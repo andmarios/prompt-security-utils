@@ -66,6 +66,18 @@ class TestWrapField:
         assert "security_warnings" in result
         assert len(result["security_warnings"]) > 0
 
+    def test_none_content_returns_none(self):
+        """Test that None content returns None instead of crashing."""
+        config = SecurityConfig()
+        result = wrap_field(None, "user", "42", _START, _END, config)
+        assert result is None
+
+    def test_none_content_skip_wrapping_returns_none(self):
+        """Test that None content with skip_wrapping also returns None."""
+        config = SecurityConfig()
+        result = wrap_field(None, "user", "42", _START, _END, config, skip_wrapping=True)
+        assert result is None
+
     def test_detection_disabled(self):
         """Test that detection can be disabled."""
         config = SecurityConfig(detection_enabled=False)
