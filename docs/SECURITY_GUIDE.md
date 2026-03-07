@@ -253,6 +253,16 @@ if success and result:
 wrapped = read_and_wrap_file(attachment_path, "attachment", f"file:{filename}", START, END)
 ```
 
+Or from the shell using the CLI:
+
+```bash
+# Wrap a file
+prompt-security-utils attachment.txt
+
+# Wrap jq output
+jq '.data.ticket' stored.json | prompt-security-utils --source-id query:ticket:789
+```
+
 ### Pattern 4: Batch Operations (lists, search results)
 
 For operations returning lists of items, use `output_external_content` with `json.dumps` for the collection:

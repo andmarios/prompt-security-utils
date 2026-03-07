@@ -75,6 +75,24 @@ for d in detections:
     print(f"{d.category}: {d.matched_text} ({d.severity.value})")
 ```
 
+## CLI
+
+The library includes a CLI for wrapping files and piped data:
+
+```bash
+# Wrap a file
+prompt-security-utils report.txt
+
+# Wrap piped jq output
+jq '.data.ticket' stored.json | prompt-security-utils
+
+# With optional source-id for traceability
+prompt-security-utils report.txt --source-id attachment:456
+jq '.data' stored.json | prompt-security-utils --source-id query:ticket:789
+```
+
+Output is JSON to stdout with security markers and any detection warnings. Run `prompt-security-utils --help` for full details on the output format.
+
 ## Configuration
 
 Settings are stored in `~/.config/prompt-security-utils/config.json`. This library provides **core security settings only**. Service-specific settings (allowlists, disabled operations) belong in the consuming applications.
